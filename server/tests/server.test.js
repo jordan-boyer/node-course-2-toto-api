@@ -4,6 +4,7 @@ const {ObjectId} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../model/todo');
+const {User} = require('./../model/user');
 const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
 beforeEach(populateTodos);
@@ -178,6 +179,61 @@ describe('GET /users/me', () => {
     });
 
     it('should return 401 if not authenticated', (done) => {
-
+        request(app)
+        .get('/users/me')
+        .expect(401)
+        .expect((res) => {
+            expect(res.body).toEqual({});
+        })
+        .end(done);
     });
 });
+
+describe('GET /users', () => {
+    it('should create a user', (done) => {
+        var email = 'example@example.com';
+        var password = '123mnb!';
+
+        request(app)
+        .post('/users')
+        .send({email, password})
+        .expect(200)
+        .expect((res) => {
+            expect(res.headers['x-auth']).toBeDefined();
+            expect(res.body._id).toBeDefined();
+            expect(res.body.email).toBe(email);
+        })
+        .end((err) => {
+            if (err) {
+                return done(err);
+            }
+            User.findOne({email}).then((user) => {
+                expect(user).toBeDefined();
+                expect(user.password).not.toBe(password);
+                done();
+            });
+        });
+    });
+
+    it('should return validation errors if request invalid', (done) => {
+        var email = 'toto'
+        var password = '14546'
+
+        request(app)
+        .post('/users')
+        .send({email, password})
+        .expect(400)
+        .end(done);
+    });
+
+    it('should not create user if email in use', (done) => {
+        var email = 'jordan@example.com'
+        var password = '14546'
+
+        request(app)
+        .post('/users')
+        .send({email, password})
+        .expect(400)
+        .end(done);
+    });
+})
