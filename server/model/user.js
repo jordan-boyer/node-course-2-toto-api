@@ -34,7 +34,7 @@ var UserSchema = new mongoose.Schema({
 });
 
 UserSchema.methods.toJSON = function () {
-    var user = this;
+    const user = this;
     var userObject = user.toObject();
     
     return _.pick(userObject, ['_id', 'email'])
@@ -52,7 +52,7 @@ UserSchema.methods.generateAuthToken = function () {
 };
 
 UserSchema.pre('save', function (next) {
-    var user = this;
+    const user = this;
 
     if (user.isModified('password')) {
         bcrypt.genSalt(10, (err, salt) => {
@@ -66,7 +66,7 @@ UserSchema.pre('save', function (next) {
     }
 });
 
-UserSchema.statics.findByToken = function (token) {
+UserSchema.statics.findByToken = function(token) {
     var User = this;
     var decoded;
 
@@ -77,7 +77,7 @@ UserSchema.statics.findByToken = function (token) {
     }
     return User.findOne({
         '_id': decoded._id,
-        'token.token': token,
+        'tokens.token': token,
         'tokens.access': 'auth'
     });
 };
